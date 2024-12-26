@@ -25,6 +25,10 @@ public class AppointmentService {
         return appointmentRepository.findByConsultantEmailAndStatus(consultantEmail, AppointmentStatus.PENDING);
     }
 
+    public List<Appointment> getAcceptedAppointmentsForConsultant(String consultantEmail) {
+        return appointmentRepository.findByConsultantEmailAndStatus(consultantEmail, AppointmentStatus.ACCEPTED);
+    }
+
     // Update appointment status (Accepted or Rejected)
     public Appointment updateAppointmentStatusByEmail(String consultantEmail, AppointmentStatus status) {
         List<Appointment> appointments = appointmentRepository.findByConsultantEmailAndStatus(consultantEmail, AppointmentStatus.PENDING);

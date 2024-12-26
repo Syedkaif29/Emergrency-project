@@ -4,7 +4,6 @@ import com.EmergencyAndMentalWellBeing.Backend.Model.Appointment;
 import com.EmergencyAndMentalWellBeing.Backend.Model.AppointmentStatus;
 import com.EmergencyAndMentalWellBeing.Backend.Service.AppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,29 +16,45 @@ public class AppointmentController {
     @Autowired
     private AppointmentService appointmentService;
 
-    // Create a new appointment request
-    @PostMapping
-    public ResponseEntity<Appointment> bookAppointment(@RequestBody Appointment appointment) {
-        appointment.setStatus(AppointmentStatus.PENDING); // Set the initial status to PENDING
-        Appointment savedAppointment = appointmentService.createAppointment(appointment);
-        return new ResponseEntity<>(savedAppointment, HttpStatus.CREATED);
-    }
-
-    // Get all pending appointments for a consultant (by email)
-    @GetMapping("/consultant/{consultantEmail}/pending")
+    // Endpoint to get all pending appointments for a consultant
+    @GetMapping("/pending/{consultantEmail}")
     public ResponseEntity<List<Appointment>> getPendingAppointments(@PathVariable String consultantEmail) {
-        List<Appointment> pendingAppointments = appointmentService.getPendingAppointmentsForConsultant(consultantEmail);
-        return new ResponseEntity<>(pendingAppointments, HttpStatus.OK);
+        List<Appointment> appointments = appointmentService.getPendingAppointmentsForConsultant(consultantEmail);
+        if (appointments.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(appointments);
     }
 
-    // Update the status of an appointment (ACCEPTED or REJECTED)
-    @PutMapping("/consultant/{consultantEmail}/status")
-    public ResponseEntity<Appointment> updateAppointmentStatus(@PathVariable String consultantEmail, @RequestBody AppointmentStatus status) {
+    @GetMapping("/accepted/{consultantEmail}")
+    public ResponseEntity<List<Appointment>> getAcceptedAppointments(@PathVariable String consultantEmail) {
+        List<Appointment> appointments = appointmentService.getAcceptedAppointmentsForConsultant(consultantEmail);
+        if (appointments.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(appointments);
+    }
+
+    // Endpoint to update appointment status
+    @PostMapping("/status/{consultantEmail}")
+    public ResponseEntity<Appointment> updateAppointmentStatus(
+            @PathVariable String consultantEmail,
+            @RequestParam AppointmentStatus status) {
         try {
             Appointment updatedAppointment = appointmentService.updateAppointmentStatusByEmail(consultantEmail, status);
-            return new ResponseEntity<>(updatedAppointment, HttpStatus.OK);
-        } catch (RuntimeException ex) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND); // Return 404 if no appointment is found
+            return ResponseEntity.ok(updatedAppointment);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(null);
         }
     }
+    @PostMapping("/book")
+    public ResponseEntity<Appointment> bookAppointment(@RequestBody Appointment appointment) {
+        try {
+            Appointment createdAppointment = appointmentService.createAppointment(appointment);
+            return ResponseEntity.ok(createdAppointment);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
 }

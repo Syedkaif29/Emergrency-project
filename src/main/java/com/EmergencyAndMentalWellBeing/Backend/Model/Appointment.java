@@ -18,19 +18,30 @@ public class Appointment {
     private LocalTime time;
 
     private AppointmentStatus status; // PENDING, ACCEPTED, REJECTED
+    private String name;
 
     // Constructors, Getters and Setters
     public Appointment() {}
 
-    public Appointment(String userId, String consultantEmail, LocalDate date, LocalTime time, AppointmentStatus status) {
+    public Appointment(String userId,String name, String consultantEmail, LocalDate date, LocalTime time, AppointmentStatus status) {
         this.userId = userId;
         this.consultantEmail = consultantEmail;
         this.date = date;
         this.time = time;
         this.status = status;
+        this.name = name;
     }
 
     // Getters and setters
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getId() {
         return id;
     }

@@ -2,122 +2,106 @@ package com.EmergencyAndMentalWellBeing.Backend.Controller;
 
 import com.EmergencyAndMentalWellBeing.Backend.Model.Users;
 import com.EmergencyAndMentalWellBeing.Backend.Model.Consultant;
-import com.EmergencyAndMentalWellBeing.Backend.Repository.UserRepo;
-import com.EmergencyAndMentalWellBeing.Backend.Repository.ConsultantRepo;
+import com.EmergencyAndMentalWellBeing.Backend.Service.UserService;
+import com.EmergencyAndMentalWellBeing.Backend.Service.ConsultantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     @Autowired
-    private UserRepo userRepository;
+    private UserService userService;
 
     @Autowired
-    private ConsultantRepo consultantRepository;
+    private ConsultantService consultantService;
 
     // User Registration API
     @PostMapping("/register/user")
-    public ResponseEntity<?> registerUser(@RequestBody Users user) {
-        // Check if all required fields are present
-        if (user.getFirstname() == null || user.getFirstname().isEmpty() ||
-                user.getLastname() == null || user.getLastname().isEmpty() ||
-                user.getEmail() == null || user.getEmail().isEmpty() ||
-                user.getPhonenumber() == null || user.getPhonenumber().isEmpty() ||
-                user.getPassword() == null || user.getPassword().isEmpty() ||
-                user.getConfirmPassword() == null || user.getConfirmPassword().isEmpty()) {
-            return ResponseEntity.badRequest().body("All fields are required.");
-        }
-
-        // Check if email already exists
-        if (userRepository.findByEmail(user.getEmail()) != null) {
-            return ResponseEntity.badRequest().body("Email already exists.");
-        }
-
-        // Check if passwords match
-        if (!user.getPassword().equals(user.getConfirmPassword())) {
-            return ResponseEntity.badRequest().body("Passwords do not match.");
-        }
-
-        // Save the user to the database
-        userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully.");
+    public ResponseEntity<Map<String, Object>> registerUser(@RequestBody Users user) {
+        String message = userService.registerUser(user);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", message.equals("User registered successfully."));
+        response.put("message", message);
+        return ResponseEntity.ok(response);
     }
 
     // Consultant Registration API
     @PostMapping("/register/consultant")
-    public ResponseEntity<?> registerConsultant(@RequestBody Consultant consultant) {
-        // Check if all required fields are present
-        if (consultant.getFirstname() == null || consultant.getFirstname().isEmpty() ||
-                consultant.getLastname() == null || consultant.getLastname().isEmpty() ||
-                consultant.getEmail() == null || consultant.getEmail().isEmpty() ||
-                consultant.getPhonenumber() == null || consultant.getPhonenumber().isEmpty() ||
-                consultant.getPassword() == null || consultant.getPassword().isEmpty() ||
-                consultant.getConfirmPassword() == null || consultant.getConfirmPassword().isEmpty() ||
-                consultant.getSpecialization() == null || consultant.getSpecialization().isEmpty() ||
-                consultant.getLicenseNumber() == null || consultant.getLicenseNumber().isEmpty()) {
-            return ResponseEntity.badRequest().body("All fields are required.");
-        }
-
-        // Check if email already exists
-        if (consultantRepository.findByEmail(consultant.getEmail()) != null) {
-            return ResponseEntity.badRequest().body("Email already exists.");
-        }
-
-        // Check if passwords match
-        if (!consultant.getPassword().equals(consultant.getConfirmPassword())) {
-            return ResponseEntity.badRequest().body("Passwords do not match.");
-        }
-
-        // Save the consultant to the database
-        consultantRepository.save(consultant);
-        return ResponseEntity.ok("Consultant registered successfully.");
+    public ResponseEntity<Map<String, Object>> registerConsultant(@RequestBody Consultant consultant) {
+        String message = consultantService.registerConsultant(consultant);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", message.equals("Consultant registered successfully."));
+        response.put("message", message);
+        return ResponseEntity.ok(response);
     }
 
     // Login API for User
     @PostMapping("/login/user")
-    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> loginDetails) {
+    public ResponseEntity<Map<String, Object>> loginUser(@RequestBody Map<String, String> loginDetails) {
         String email = loginDetails.get("email");
         String password = loginDetails.get("password");
 
-        // Find user by email
-        Users user = userRepository.findByEmail(email);
-
-        if (user == null || !user.getPassword().equals(password)) {
-            return ResponseEntity.badRequest().body("Invalid email or password.");
-        }
-
-        // Successful login for user
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "User login successful.");
-
+        String message = userService.loginUser(email, password);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", message.equals("User login successful."));
+        response.put("message", message);
         return ResponseEntity.ok(response);
     }
 
     // Login API for Consultant
     @PostMapping("/login/consultant")
-    public ResponseEntity<?> loginConsultant(@RequestBody Map<String, String> loginDetails) {
+    public ResponseEntity<Map<String, Object>> loginConsultant(@RequestBody Map<String, String> loginDetails) {
         String email = loginDetails.get("email");
         String password = loginDetails.get("password");
 
-        // Find consultant by email
-        Consultant consultant = consultantRepository.findByEmail(email);
+        String message = consultantService.loginConsultant(email, password);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", message.equals("Consultant login successful."));
+        response.put("message", message);
+        return ResponseEntity.ok(response);
+    }
 
-        if (consultant == null || !consultant.getPassword().equals(password)) {
-            return ResponseEntity.badRequest().body("Invalid email or password.");
+    // Fetch User Profile by Email
+    @GetMapping("/profile/user/{email}")
+    public ResponseEntity<Map<String, Object>> getUserProfile(@PathVariable String email) {
+        Users user = userService.getUserByEmail(email); // Assumes userService has a method to fetch user by email
+        Map<String, Object> response = new HashMap<>();
+
+        if (user != null) {
+            response.put("success", true);
+            response.put("data", user);
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("success", false);
+            response.put("message", "User not found.");
+            return ResponseEntity.status(404).body(response);
         }
+    }
 
-        // Successful login for consultant
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Consultant login successful.");
-        response.put("specialization", consultant.getSpecialization());
-        response.put("licenseNumber", consultant.getLicenseNumber());
 
+    // Update User details
+    @PutMapping("/update/user/{email}")
+    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable String email, @RequestBody Users updatedUser) {
+        String message = userService.updateUser(email, updatedUser);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", message.equals("User details updated successfully."));
+        response.put("message", message);
+        return ResponseEntity.ok(response);
+    }
+
+    // Update Consultant details
+    @PutMapping("/update/consultant/{email}")
+    public ResponseEntity<Map<String, Object>> updateConsultant(@PathVariable String email, @RequestBody Consultant updatedConsultant) {
+        String message = consultantService.updateConsultant(email, updatedConsultant);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", message.equals("Consultant details updated successfully."));
+        response.put("message", message);
         return ResponseEntity.ok(response);
     }
 }
+

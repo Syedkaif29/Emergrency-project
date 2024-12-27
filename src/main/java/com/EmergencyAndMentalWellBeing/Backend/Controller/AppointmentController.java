@@ -35,6 +35,16 @@ public class AppointmentController {
         return ResponseEntity.ok(appointments);
     }
 
+    @GetMapping("/status")
+    public ResponseEntity<List<Appointment>> getAppointmentsByUserEmail(@RequestParam String email) {
+        List<Appointment> appointments = appointmentService.getAppointmentsByEmail(email);
+        if (appointments.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(appointments);
+    }
+
+
     // Endpoint to update appointment status
     @PostMapping("/status/{consultantEmail}")
     public ResponseEntity<Appointment> updateAppointmentStatus(

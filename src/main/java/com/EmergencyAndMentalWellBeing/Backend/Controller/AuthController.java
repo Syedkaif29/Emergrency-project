@@ -4,6 +4,7 @@ import com.EmergencyAndMentalWellBeing.Backend.Model.Users;
 import com.EmergencyAndMentalWellBeing.Backend.Model.Consultant;
 import com.EmergencyAndMentalWellBeing.Backend.Repository.UserRepo;
 import com.EmergencyAndMentalWellBeing.Backend.Repository.ConsultantRepo;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +24,7 @@ public class AuthController {
 
     // User Registration API
     @PostMapping("/register/user")
-    public ResponseEntity<?> registerUser(@RequestBody Users user) {
-        // Check if all required fields are present
+    public ResponseEntity<?> registerUser(@org.jetbrains.annotations.NotNull @RequestBody Users user) {
         if (user.getFirstname() == null || user.getFirstname().isEmpty() ||
                 user.getLastname() == null || user.getLastname().isEmpty() ||
                 user.getEmail() == null || user.getEmail().isEmpty() ||
@@ -34,25 +34,25 @@ public class AuthController {
             return ResponseEntity.badRequest().body("All fields are required.");
         }
 
-        // Check if email already exists
         if (userRepository.findByEmail(user.getEmail()) != null) {
             return ResponseEntity.badRequest().body("Email already exists.");
         }
 
-        // Check if passwords match
         if (!user.getPassword().equals(user.getConfirmPassword())) {
             return ResponseEntity.badRequest().body("Passwords do not match.");
         }
 
-        // Save the user to the database
-        userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully.");
+        try {
+            userRepository.save(user);
+            return ResponseEntity.ok("User registered successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error occurred while saving user: " + e.getMessage());
+        }
     }
 
     // Consultant Registration API
     @PostMapping("/register/consultant")
-    public ResponseEntity<?> registerConsultant(@RequestBody Consultant consultant) {
-        // Check if all required fields are present
+    public ResponseEntity<?> registerConsultant(@RequestBody @NotNull Consultant consultant) {
         if (consultant.getFirstname() == null || consultant.getFirstname().isEmpty() ||
                 consultant.getLastname() == null || consultant.getLastname().isEmpty() ||
                 consultant.getEmail() == null || consultant.getEmail().isEmpty() ||
@@ -64,60 +64,107 @@ public class AuthController {
             return ResponseEntity.badRequest().body("All fields are required.");
         }
 
-        // Check if email already exists
         if (consultantRepository.findByEmail(consultant.getEmail()) != null) {
             return ResponseEntity.badRequest().body("Email already exists.");
         }
 
-        // Check if passwords match
         if (!consultant.getPassword().equals(consultant.getConfirmPassword())) {
             return ResponseEntity.badRequest().body("Passwords do not match.");
         }
 
-        // Save the consultant to the database
-        consultantRepository.save(consultant);
-        return ResponseEntity.ok("Consultant registered successfully.");
+        try {
+            consultantRepository.save(consultant);
+            return ResponseEntity.ok("Consultant registered successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error occurred while saving consultant: " + e.getMessage());
+        }
     }
 
     // Login API for User
     @PostMapping("/login/user")
-    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> loginDetails) {
+    public ResponseEntity<?> loginUser(@RequestBody @NotNull Map<String, String> loginDetails) {
         String email = loginDetails.get("email");
         String password = loginDetails.get("password");
 
-        // Find user by email
         Users user = userRepository.findByEmail(email);
-
         if (user == null || !user.getPassword().equals(password)) {
             return ResponseEntity.badRequest().body("Invalid email or password.");
         }
 
-        // Successful login for user
         Map<String, String> response = new HashMap<>();
         response.put("message", "User login successful.");
-
         return ResponseEntity.ok(response);
     }
 
     // Login API for Consultant
     @PostMapping("/login/consultant")
-    public ResponseEntity<?> loginConsultant(@RequestBody Map<String, String> loginDetails) {
+    public ResponseEntity<?> loginConsultant(@RequestBody @NotNull Map<String, String> loginDetails) {
         String email = loginDetails.get("email");
         String password = loginDetails.get("password");
 
-        // Find consultant by email
         Consultant consultant = consultantRepository.findByEmail(email);
-
         if (consultant == null || !consultant.getPassword().equals(password)) {
             return ResponseEntity.badRequest().body("Invalid email or password.");
         }
 
-        // Successful login for consultant
         Map<String, String> response = new HashMap<>();
         response.put("message", "Consultant login successful.");
         response.put("specialization", consultant.getSpecialization());
         response.put("licenseNumber", consultant.getLicenseNumber());
-
         return ResponseEntity.ok(response);
+    }
+
+    // Get all users
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        return ResponseEntity.ok(userRepository.findAll());
+    }
+
+    // Get user by userId
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getUserById(@PathVariable String userId) {
+        Users user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body("User not found.");
+        }
+        return ResponseEntity.ok(user);
+    }
+
+    // Update user details
+    @PostMapping("/user/{userId}")
+    public ResponseEntity<?> updateUser(@PathVariable String userId, @RequestBody Users updatedUser) {
+        Users user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body("User not found.");
+        }
+
+        user.setFirstname(updatedUser.getFirstname());
+        user.setLastname(updatedUser.getLastname());
+        user.setEmail(updatedUser.getEmail());
+        user.setPhonenumber(updatedUser.getPhonenumber());
+        user.setPassword(updatedUser.getPassword());
+
+        try {
+            userRepository.save(user);
+            return ResponseEntity.ok("User updated successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error occurred while updating user: " + e.getMessage());
+        }
+    }
+
+    // Delete user by userId
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable String userId) {
+        Users user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body("User not found.");
+        }
+
+        try {
+            userRepository.delete(user);
+            return ResponseEntity.ok("User deleted successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error occurred while deleting user: " + e.getMessage());
+        }
     }
 }

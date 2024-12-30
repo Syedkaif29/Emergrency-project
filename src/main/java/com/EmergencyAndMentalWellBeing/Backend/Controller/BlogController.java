@@ -18,7 +18,7 @@ public class BlogController {
     // Create a new blog
     @PostMapping
     public Blog createBlog(@RequestBody Blog blog) {
-        return blogService.createBlog(blog.getTitle(), blog.getContent(), blog.getAuthorName());
+        return blogService.createBlog(blog.getTitle(), blog.getContent(), blog.getAuthorName(), blog.getAuthorEmail());
     }
 
     // Get all blogs

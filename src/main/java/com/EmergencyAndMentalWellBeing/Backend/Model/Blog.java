@@ -12,15 +12,18 @@ public class Blog {
     private String title;
     private String content;
     private String authorName; // The user's name
+
+    private String authorEmail;
     private LocalDateTime date;
 
     // Constructors
     public Blog() {}
-    public Blog(String title, String content, String authorName, LocalDateTime date) {
+    public Blog(String title, String content, String authorName,String authorEmail, LocalDateTime date) {
         this.title = title;
         this.content = content;
         this.authorName = authorName;
         this.date = date;
+        this.authorEmail=authorEmail;
     }
 
     // Getters and Setters
@@ -55,7 +58,13 @@ public class Blog {
     public void setAuthorName(String authorName) {
         this.authorName = authorName;
     }
+    public String getAuthorEmail() {
+        return authorEmail;
+    }
 
+    public void setAuthorEmail(String authorEmail) {
+        this.authorEmail = authorEmail;
+    }
     public LocalDateTime getDate() {
         return date;
     }

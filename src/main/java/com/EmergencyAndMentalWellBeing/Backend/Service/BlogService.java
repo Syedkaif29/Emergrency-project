@@ -17,8 +17,8 @@ public class BlogService {
     @Autowired
     private BlogRepository blogRepository;
 
-    public Blog createBlog(String title, String content, String authorName) {
-        Blog blog = new Blog(title, content, authorName, LocalDateTime.now());
+    public Blog createBlog(String title, String content, String authorName, String authorEmail) {
+        Blog blog = new Blog(title, content, authorName,authorEmail, LocalDateTime.now());
         return blogRepository.save(blog);
     }
 

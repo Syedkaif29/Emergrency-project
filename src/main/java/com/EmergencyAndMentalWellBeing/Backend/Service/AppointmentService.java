@@ -43,4 +43,9 @@ public class AppointmentService {
         return appointmentRepository.save(appointmentToUpdate);
     }
 
+    public List<Appointment> getAppointmentsByEmail(String email) {
+        return appointmentRepository.findByUserEmail(email);
+    }
+
+
 }

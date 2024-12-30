@@ -13,4 +13,5 @@ public interface AppointmentRepository extends MongoRepository<Appointment, Stri
 
     List<Appointment> findByConsultantEmailAndStatus(String consultantEmail, AppointmentStatus status);
 
+    List<Appointment> findByUserEmail(String email);
 }

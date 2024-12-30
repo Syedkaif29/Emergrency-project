@@ -5,22 +5,23 @@ import com.EmergencyAndMentalWellBeing.Backend.Model.Consultant;
 import com.EmergencyAndMentalWellBeing.Backend.Repository.UserRepo;
 import com.EmergencyAndMentalWellBeing.Backend.Repository.ConsultantRepo;
 import org.jetbrains.annotations.NotNull;
+import com.EmergencyAndMentalWellBeing.Backend.Service.UserService;
+import com.EmergencyAndMentalWellBeing.Backend.Service.ConsultantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     @Autowired
-    private UserRepo userRepository;
+    private UserService userService;
 
     @Autowired
-    private ConsultantRepo consultantRepository;
+    private ConsultantService consultantService;
 
     // User Registration API
     @PostMapping("/register/user")
@@ -86,6 +87,10 @@ public class AuthController {
         String email = loginDetails.get("email");
         String password = loginDetails.get("password");
 
+        String message = userService.loginUser(email, password);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", message.equals("User login successful."));
+        response.put("message", message);
         Users user = userRepository.findByEmail(email);
         if (user == null || !user.getPassword().equals(password)) {
             return ResponseEntity.badRequest().body("Invalid email or password.");
@@ -102,15 +107,55 @@ public class AuthController {
         String email = loginDetails.get("email");
         String password = loginDetails.get("password");
 
+        String message = consultantService.loginConsultant(email, password);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", message.equals("Consultant login successful."));
+        response.put("message", message);
+        return ResponseEntity.ok(response);
+    }
+
+    // Fetch User Profile by Email
+    @GetMapping("/profile/user/{email}")
+    public ResponseEntity<Map<String, Object>> getUserProfile(@PathVariable String email) {
+        Users user = userService.getUserByEmail(email); // Assumes userService has a method to fetch user by email
+        Map<String, Object> response = new HashMap<>();
+
+        if (user != null) {
+            response.put("success", true);
+            response.put("data", user);
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("success", false);
+            response.put("message", "User not found.");
+            return ResponseEntity.status(404).body(response);
         Consultant consultant = consultantRepository.findByEmail(email);
         if (consultant == null || !consultant.getPassword().equals(password)) {
             return ResponseEntity.badRequest().body("Invalid email or password.");
         }
+    }
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Consultant login successful.");
         response.put("specialization", consultant.getSpecialization());
         response.put("licenseNumber", consultant.getLicenseNumber());
+
+    // Update User details
+    @PutMapping("/update/user/{email}")
+    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable String email, @RequestBody Users updatedUser) {
+        String message = userService.updateUser(email, updatedUser);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", message.equals("User details updated successfully."));
+        response.put("message", message);
+        return ResponseEntity.ok(response);
+    }
+
+    // Update Consultant details
+    @PutMapping("/update/consultant/{email}")
+    public ResponseEntity<Map<String, Object>> updateConsultant(@PathVariable String email, @RequestBody Consultant updatedConsultant) {
+        String message = consultantService.updateConsultant(email, updatedConsultant);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", message.equals("Consultant details updated successfully."));
+        response.put("message", message);
         return ResponseEntity.ok(response);
     }
 
@@ -168,3 +213,4 @@ public class AuthController {
         }
     }
 }
+

@@ -11,8 +11,17 @@ public class Contact {
     private String name;
     private String contactNumber;
     private String email;
-
+    private String userEmail;
     // Getters and Setters
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
+
     public String getId() {
         return id;
     }
